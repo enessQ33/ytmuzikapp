@@ -1,190 +1,156 @@
-<!DOCTYPE html>
+          <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>YouTube Müzik Arama</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background-color: #0f0f0f;
-      color: white;
-      font-family: 'Roboto', sans-serif;
-    }
-    header {
-      background-color: #202020;
-      padding: 20px;
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      color: red;
-      letter-spacing: 1px;
-    }
-    .search-container {
-      display: flex;
-      justify-content: center;
-      padding: 20px;
-      background-color: #181818;
-      gap: 10px;
-    }
-    #search-bar {
-      width: 60%;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: none;
-      outline: none;
-    }
-    #search-button {
-      background-color: red;
-      color: white;
-      padding: 12px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    #search-button:hover {
-      background-color: #cc0000;
-    }
-    .results {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      padding: 20px;
-    }
-    .result-card {
-      display: flex;
-      background-color: #1e1e1e;
-      border-radius: 8px;
-      overflow: hidden;
-      transition: transform 0.2s ease;
-      cursor: pointer;
-    }
-    .result-card:hover {
-      transform: scale(1.02);
-    }
-    .thumbnail {
-      width: 160px;
-      height: 90px;
-      object-fit: cover;
-    }
-    .info {
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    .title {
-      font-size: 16px;
-      font-weight: bold;
-      color: white;
-    }
-    .channel {
-      font-size: 14px;
-      color: #aaa;
-    }
-    .player {
-      padding: 20px;
-      display: none;
-    }
-    iframe {
-      width: 100%;
-      height: 320px;
-      border: none;
-      border-radius: 8px;
-    }
-    .loading {
-      text-align: center;
-      padding: 20px;
-      font-size: 16px;
-      color: #999;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Enes'in Müzik Arama Uygulaması</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #121212;
+    color: #eee;
+    margin: 0; padding: 0;
+  }
+  header {
+    background: #1DB954;
+    padding: 15px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: 1.2px;
+  }
+  #searchForm {
+    display: flex;
+    justify-content: center;
+    margin: 20px;
+  }
+  #searchInput {
+    width: 70%;
+    padding: 10px;
+    border: none;
+    border-radius: 25px 0 0 25px;
+    font-size: 18px;
+  }
+  #searchButton {
+    padding: 10px 25px;
+    border: none;
+    background: #1DB954;
+    color: white;
+    font-weight: 700;
+    border-radius: 0 25px 25px 0;
+    cursor: pointer;
+    font-size: 18px;
+  }
+  #results {
+    margin: 10px 15px;
+  }
+  .videoItem {
+    background: #222;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  .videoItem:hover {
+    background: #333;
+  }
+  .thumbnail {
+    width: 120px;
+    border-radius: 8px;
+  }
+  .videoInfo {
+    flex-grow: 1;
+  }
+  .videoTitle {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+  }
+  audio {
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    background: #121212;
+    outline: none;
+  }
+</style>
 </head>
 <body>
 
-  <header>YouTube Müzik Arama</header>
+<header>Enes'in Müzik Arama</header>
 
-  <div class="search-container">
-    <input type="text" id="search-bar" placeholder="Şarkı ya da sanatçı yaz...">
-    <button id="search-button">Ara</button>
-  </div>
+<form id="searchForm">
+  <input type="text" id="searchInput" placeholder="Şarkı, sanatçı veya albüm ara..." />
+  <button type="submit" id="searchButton">Ara</button>
+</form>
 
-  <div class="player" id="player"></div>
+<div id="results"></div>
 
-  <div id="loading" class="loading"></div>
+<audio id="audioPlayer" controls></audio>
 
-  <div class="results" id="results"></div>
+<script>
+  const apiKey = 'AIzaSyAzDPzGZIRKutab9Dv5X2qKB_jPYhKJWO4'; // Senin API key
 
-  <script>
-    const apiKey = "AIzaSyAzDPzGZIRKutab9Dv5X2qKB_jPYhKJWO4";
-    const searchInput = document.getElementById("search-bar");
-    const resultsDiv = document.getElementById("results");
-    const playerDiv = document.getElementById("player");
-    const loadingDiv = document.getElementById("loading");
+  const searchForm = document.getElementById('searchForm');
+  const searchInput = document.getElementById('searchInput');
+  const resultsDiv = document.getElementById('results');
+  const audioPlayer = document.getElementById('audioPlayer');
 
-    function searchYouTube(query) {
-      resultsDiv.innerHTML = "";
-      playerDiv.style.display = "none";
-      loadingDiv.innerHTML = "Yükleniyor...";
+  // YouTube API'den video arama
+  async function searchVideos(query) {
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(query)}&key=${apiKey}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.items;
+  }
 
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&type=video&key=${apiKey}`;
+  // Müzik çalma fonksiyonu - burda sadece videonun URL'si koyacağız (sadece ses değil, YouTube videosu)
+  function playVideo(videoId) {
+    // YouTube embed URL'si - sadece ses için değil, video da oynar
+    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1&showinfo=0&rel=0&modestbranding=1`;
+    // iframe yerine audio tag ile oynatma yok, o yüzden popup veya yeni sayfa açarız
+    // ama bu demo için yeni pencerede açalım
+    window.open(embedUrl, '_blank', 'width=400,height=300');
+  }
 
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          loadingDiv.innerHTML = "";
-          if (!data.items) {
-            resultsDiv.innerHTML = "<p>Sonuç bulunamadı.</p>";
-            return;
-          }
-          data.items.forEach(item => {
-            const videoId = item.id.videoId;
-            const title = item.snippet.title;
-            const channel = item.snippet.channelTitle;
-            const thumbnail = item.snippet.thumbnails.medium.url;
+  // Arama sonucu göster
+  function displayResults(videos) {
+    resultsDiv.innerHTML = '';
+    videos.forEach(video => {
+      const videoId = video.id.videoId;
+      const title = video.snippet.title;
+      const thumbnail = video.snippet.thumbnails.medium.url;
 
-            const card = document.createElement("div");
-            card.className = "result-card";
-            card.onclick = () => showVideo(videoId);
+      const videoDiv = document.createElement('div');
+      videoDiv.className = 'videoItem';
 
-            card.innerHTML = `
-              <img class="thumbnail" src="${thumbnail}">
-              <div class="info">
-                <div class="title">${title}</div>
-                <div class="channel">${channel}</div>
-              </div>
-            `;
-            resultsDiv.appendChild(card);
-          });
-        })
-        .catch(err => {
-          console.error(err);
-          loadingDiv.innerHTML = "Hata oluştu.";
-        });
-    }
-
-    function showVideo(videoId) {
-      playerDiv.style.display = "block";
-      playerDiv.innerHTML = `
-        <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+      videoDiv.innerHTML = `
+        <img src="${thumbnail}" alt="${title}" class="thumbnail" />
+        <div class="videoInfo">
+          <h3 class="videoTitle">${title}</h3>
+        </div>
       `;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
 
-    document.getElementById("search-button").onclick = () => {
-      const q = searchInput.value.trim();
-      if (q) searchYouTube(q);
-    };
+      videoDiv.addEventListener('click', () => playVideo(videoId));
 
-    searchInput.addEventListener("keypress", e => {
-      if (e.key === "Enter") {
-        const q = searchInput.value.trim();
-        if (q) searchYouTube(q);
-      }
+      resultsDiv.appendChild(videoDiv);
     });
-  </script>
+  }
+
+  searchForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const query = searchInput.value.trim();
+    if (!query) return;
+    resultsDiv.innerHTML = 'Aranıyor...';
+    const videos = await searchVideos(query);
+    displayResults(videos);
+  });
+</script>
 
 </body>
 </html>
