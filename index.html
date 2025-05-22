@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>YouTube Müzik Arama</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0f0f0f;
+      color: white;
+      font-family: 'Roboto', sans-serif;
+    }
+    header {
+      background-color: #202020;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: red;
+      letter-spacing: 1px;
+    }
+    .search-container {
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+      background-color: #181818;
+      gap: 10px;
+    }
+    #search-bar {
+      width: 60%;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      outline: none;
+    }
+    #search-button {
+      background-color: red;
+      color: white;
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #search-button:hover {
+      background-color: #cc0000;
+    }
+    .results {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      padding: 20px;
+    }
+    .result-card {
+      display: flex;
+      background-color: #1e1e1e;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+    }
+    .result-card:hover {
+      transform: scale(1.02);
+    }
+    .thumbnail {
+      width: 160px;
+      height: 90px;
+      object-fit: cover;
+    }
+    .info {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .title {
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+    }
+    .channel {
+      font-size: 14px;
+      color: #aaa;
+    }
+    .player {
+      padding: 20px;
+      display: none;
+    }
+    iframe {
+      width: 100%;
+      height: 320px;
+      border: none;
+      border-radius: 8px;
+    }
+    .loading {
+      text-align: center;
+      padding: 20px;
+      font-size: 16px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+
+  <header>YouTube Müzik Arama</header>
+
+  <div class="search-container">
+    <input type="text" id="search-bar" placeholder="Şarkı ya da sanatçı yaz...">
+    <button id="search-button">Ara</button>
+  </div>
+
+  <div class="player" id="player"></div>
+
+  <div id="loading" class="loading"></div>
+
+  <div class="results" id="results"></div>
+
+  <script>
+    const apiKey = "AIzaSyAzDPzGZIRKutab9Dv5X2qKB_jPYhKJWO4";
+    const searchInput = document.getElementById("search-bar");
+    const resultsDiv = document.getElementById("results");
+    const playerDiv = document.getElementById("player");
+    const loadingDiv = document.getElementById("loading");
+
+    function searchYouTube(query) {
+      resultsDiv.innerHTML = "";
+      playerDiv.style.display = "none";
+      loadingDiv.innerHTML = "Yükleniyor...";
+
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&type=video&key=${apiKey}`;
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          loadingDiv.innerHTML = "";
+          if (!data.items) {
+            resultsDiv.innerHTML = "<p>Sonuç bulunamadı.</p>";
+            return;
+          }
+          data.items.forEach(item => {
+            const videoId = item.id.videoId;
+            const title = item.snippet.title;
+            const channel = item.snippet.channelTitle;
+            const thumbnail = item.snippet.thumbnails.medium.url;
+
+            const card = document.createElement("div");
+            card.className = "result-card";
+            card.onclick = () => showVideo(videoId);
+
+            card.innerHTML = `
+              <img class="thumbnail" src="${thumbnail}">
+              <div class="info">
+                <div class="title">${title}</div>
+                <div class="channel">${channel}</div>
+              </div>
+            `;
+            resultsDiv.appendChild(card);
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          loadingDiv.innerHTML = "Hata oluştu.";
+        });
+    }
+
+    function showVideo(videoId) {
+      playerDiv.style.display = "block";
+      playerDiv.innerHTML = `
+        <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+      `;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.getElementById("search-button").onclick = () => {
+      const q = searchInput.value.trim();
+      if (q) searchYouTube(q);
+    };
+
+    searchInput.addEventListener("keypress", e => {
+      if (e.key === "Enter") {
+        const q = searchInput.value.trim();
+        if (q) searchYouTube(q);
+      }
+    });
+  </script>
+
+</body>
+</html>
