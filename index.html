@@ -3,182 +3,210 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Havalı YouTube Müzik Arama</title>
+<title>Havalı YouTube Müzik</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+  
   body {
-    margin: 0; 
+    margin: 0; padding: 0;
     font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #1f1c2c, #928dab);
+    background: #121212;
     color: #eee;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
+    overflow-x: hidden;
   }
   header {
-    padding: 15px 20px;
-    font-weight: 600;
-    font-size: 1.6rem;
-    background: rgba(0,0,0,0.4);
-    text-align: center;
+    padding: 20px;
+    font-size: 2.5rem;
+    font-weight: 700;
     letter-spacing: 2px;
+    animation: slideDown 0.8s ease forwards;
+    opacity: 0;
   }
-  #searchForm {
+  @keyframes slideDown {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    from {
+      opacity: 0;
+      transform: translateY(-40px);
+    }
+  }
+  #search-container {
+    width: 90%; max-width: 600px;
     display: flex;
-    margin: 15px 20px;
+    margin-bottom: 20px;
+    animation: fadeIn 1s ease 0.5s forwards;
+    opacity: 0;
+  }
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
   }
   #searchInput {
-    flex: 1;
-    padding: 12px 15px;
-    font-size: 1rem;
+    flex-grow: 1;
+    padding: 14px 16px;
     border: none;
     border-radius: 8px 0 0 8px;
+    font-size: 1rem;
     outline: none;
+    transition: box-shadow 0.3s ease;
   }
-  #searchButton {
-    padding: 12px 20px;
-    font-weight: 600;
+  #searchInput:focus {
+    box-shadow: 0 0 8px #ff0000aa;
+  }
+  #searchBtn {
+    padding: 14px 24px;
     border: none;
-    background: #ff4c60;
+    background: linear-gradient(45deg, #ff0047, #ff7300);
     color: white;
-    border-radius: 0 8px 8px 0;
+    font-weight: 700;
     cursor: pointer;
-    transition: background 0.3s ease;
+    border-radius: 0 8px 8px 0;
+    font-size: 1rem;
+    transition: background 0.4s ease, transform 0.2s ease;
   }
-  #searchButton:hover {
-    background: #ff1a3c;
+  #searchBtn:hover {
+    background: linear-gradient(45deg, #ff7300, #ff0047);
+    transform: scale(1.1);
   }
   #results {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0 20px 20px;
+    width: 90%; max-width: 600px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(160px,1fr));
+    gap: 15px;
+    padding-bottom: 20px;
   }
-  .video {
-    display: flex;
-    background: rgba(255,255,255,0.1);
-    margin-bottom: 12px;
-    border-radius: 10px;
+  .video-card {
+    background: #222;
+    border-radius: 12px;
+    overflow: hidden;
     cursor: pointer;
-    transition: background 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    will-change: transform;
   }
-  .video:hover {
-    background: rgba(255,255,255,0.2);
+  .video-card:hover {
+    transform: perspective(600px) rotateY(8deg) scale(1.05);
+    box-shadow: 0 8px 20px #ff0047cc;
   }
-  .thumbnail {
-    flex-shrink: 0;
-    width: 140px;
-    border-radius: 10px 0 0 10px;
-  }
-  .thumbnail img {
+  .video-thumb {
     width: 100%;
-    border-radius: 10px 0 0 10px;
+    display: block;
+    border-bottom: 3px solid #ff0047;
+    transition: filter 0.3s ease;
   }
-  .details {
-    padding: 10px 15px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+  .video-card:hover .video-thumb {
+    filter: brightness(1.1);
   }
-  .title {
-    font-weight: 600;
-    font-size: 1.1rem;
-    margin-bottom: 6px;
-  }
-  .channel {
+  .video-title {
+    padding: 12px 10px;
     font-size: 0.9rem;
-    color: #ccc;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #ff7300;
+    transition: color 0.3s ease;
   }
-  audio {
-    display: none;
+  .video-card:hover .video-title {
+    color: #ff0047;
+  }
+  #player {
+    margin: 20px 0 40px 0;
+    width: 90%; max-width: 600px;
+    height: 360px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 20px #ff0047aa;
+    animation: fadeIn 0.8s ease forwards;
+    opacity: 0;
+  }
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
   }
 </style>
 </head>
 <body>
-<header>Havalı YouTube Müzik Arama</header>
 
-<form id="searchForm" autocomplete="off">
-  <input id="searchInput" type="text" placeholder="Şarkı veya sanatçı adı..." required />
-  <button id="searchButton" type="submit">Ara</button>
-</form>
+<header>Havalı YouTube Müzik</header>
+
+<div id="search-container">
+  <input type="search" id="searchInput" placeholder="Şarkı veya sanatçı ara..." />
+  <button id="searchBtn">Ara</button>
+</div>
 
 <div id="results"></div>
 
-<audio id="player" controls></audio>
+<div id="player"></div>
 
 <script>
-const API_KEY = 'AIzaSyAzDPzGZIRKutab9Dv5X2qKB_jPYhKJWO4'; // Senin API key
-const searchForm = document.getElementById('searchForm');
-const searchInput = document.getElementById('searchInput');
-const resultsDiv = document.getElementById('results');
-const player = document.getElementById('player');
+  const API_KEY = 'AIzaSyAzDPzGZIRKutab9Dv5X2qKB_jPYhKJWO4';
 
-searchForm.addEventListener('submit', e => {
-  e.preventDefault();
-  const query = searchInput.value.trim();
-  if (!query) return;
-  resultsDiv.innerHTML = '<p style="text-align:center; padding:20px;">Yükleniyor...</p>';
-  fetchVideos(query);
-});
+  const searchBtn = document.getElementById('searchBtn');
+  const searchInput = document.getElementById('searchInput');
+  const results = document.getElementById('results');
+  const player = document.getElementById('player');
 
-async function fetchVideos(query) {
-  try {
-    // YouTube Data API: arama yap
-    const searchResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(query)}&key=${API_KEY}`
-    );
-    const searchData = await searchResponse.json();
-    if (!searchData.items) {
-      resultsDiv.innerHTML = '<p style="text-align:center;">Sonuç bulunamadı.</p>';
-      return;
-    }
-    displayResults(searchData.items);
-  } catch (err) {
-    resultsDiv.innerHTML = '<p style="text-align:center; color:#f55;">Hata oluştu. Tekrar dene.</p>';
-    console.error(err);
-  }
-}
-
-function displayResults(items) {
-  resultsDiv.innerHTML = '';
-  items.forEach(item => {
-    const videoId = item.id.videoId;
-    const title = item.snippet.title;
-    const channel = item.snippet.channelTitle;
-    const thumbnail = item.snippet.thumbnails.medium.url;
-
-    const videoElem = document.createElement('div');
-    videoElem.className = 'video';
-    videoElem.innerHTML = `
-      <div class="thumbnail"><img src="${thumbnail}" alt="${title}" /></div>
-      <div class="details">
-        <div class="title">${title}</div>
-        <div class="channel">${channel}</div>
-      </div>
+  function createVideoCard(video) {
+    const div = document.createElement('div');
+    div.className = 'video-card';
+    div.innerHTML = `
+      <img class="video-thumb" src="${video.snippet.thumbnails.high.url}" alt="${video.snippet.title}">
+      <div class="video-title" title="${video.snippet.title}">${video.snippet.title}</div>
     `;
-    videoElem.addEventListener('click', () => {
-      playVideo(videoId);
-    });
-    resultsDiv.appendChild(videoElem);
-  });
-}
+    div.onclick = () => {
+      player.innerHTML = `
+        <iframe src="https://www.youtube.com/embed/${video.id.videoId}?autoplay=1" 
+          allow="autoplay; encrypted-media" allowfullscreen>
+        </iframe>
+      `;
+      player.style.opacity = 0;
+      setTimeout(() => {
+        player.style.opacity = 1;
+      }, 100);
+      player.scrollIntoView({behavior: 'smooth'});
+    };
+    return div;
+  }
 
-function playVideo(videoId) {
-  // YouTube müziğini doğrudan çalamayız ama gömülü oynatıcıyla açarız
-  // Burada iframe açabiliriz ya da direkt oynatıcıyı görünür yaparız
-  // Enes, direkt gömülü oynatıcı moduna geçiyoruz:
+  async function searchVideos(query) {
+    results.innerHTML = '<p style="text-align:center;">Yükleniyor...</p>';
+    player.innerHTML = '';
+    try {
+      const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=12&q=${encodeURIComponent(query)}&key=${API_KEY}`);
+      const data = await response.json();
+      if (!data.items || data.items.length === 0) {
+        results.innerHTML = '<p style="text-align:center;">Sonuç bulunamadı.</p>';
+        return;
+      }
+      results.innerHTML = '';
+      data.items.forEach(video => {
+        results.appendChild(createVideoCard(video));
+      });
+    } catch (e) {
+      results.innerHTML = '<p style="text-align:center;">Bir hata oluştu.</p>';
+      console.error(e);
+    }
+  }
 
-  resultsDiv.innerHTML = `
-    <iframe width="100%" height="240" 
-      src="https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1&loop=1&playlist=${videoId}" 
-      frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-    <button id="backBtn" style="margin-top:10px; padding:10px 15px; background:#ff4c60; color:#fff; border:none; border-radius:8px; cursor:pointer;">Geri Dön</button>
-  `;
-  const backBtn = document.getElementById('backBtn');
-  backBtn.addEventListener('click', () => {
-    resultsDiv.innerHTML = '';
+  searchBtn.addEventListener('click', () => {
+    const query = searchInput.value.trim();
+    if (query) searchVideos(query);
   });
-}
+
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      searchBtn.click();
+    }
+  });
 </script>
+
 </body>
 </html>
